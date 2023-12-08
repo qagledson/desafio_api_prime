@@ -1,0 +1,373 @@
+{
+	"info": {
+		"_postman_id": "6a59a2ee-1cf3-4864-b0e1-270cfefc7d3d",
+		"name": "Teste Prime",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30285755",
+		"_collection_link": "https://crimson-resonance-218432.postman.co/workspace/Estudo~6ec86b27-d813-4eda-8036-dd8412c1d272/collection/30285755-6a59a2ee-1cf3-4864-b0e1-270cfefc7d3d?action=share&source=collection_link&creator=30285755"
+	},
+	"item": [
+		{
+			"name": "listClientsOK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// CT001 - Teste de resposta bem-sucedida\r",
+							"pm.test(\"Status code é 200 e a resposta não está vazia\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    pm.response.to.have.jsonBody();\r",
+							"});\r",
+							"\r",
+							"// CT002 - Teste de validação dos campos\r",
+							"pm.test(\"Todos os campos estão presentes e no formato correto\", function () {\r",
+							"    const jsonDataArray = pm.response.json();\r",
+							"\r",
+							"    // Verifica se há pelo menos um objeto no array\r",
+							"    pm.expect(jsonDataArray).to.be.an('array').to.have.lengthOf.at.least(1);\r",
+							"\r",
+							"    // Itera sobre cada objeto no array\r",
+							"    jsonDataArray.forEach(jsonData => {\r",
+							"        pm.expect(jsonData).to.have.property(\"id\").to.be.a('string');\r",
+							"        pm.expect(jsonData).to.have.property(\"nome\").to.be.a('string');\r",
+							"        pm.expect(jsonData).to.have.property(\"email\").to.be.a('string');\r",
+							"\r",
+							"        // Correção para o campo 'fone' dentro de cada objeto\r",
+							"        const fone = String(jsonData.fone).replace(/\\D/g, ''); // Converte para string antes de chamar replace\r",
+							"        pm.expect(fone).to.be.a('string').and.to.match(/^\\d+$/); // Verifica se é uma string contendo apenas dígitos\r",
+							"\r",
+							"        pm.expect(jsonData).to.have.property(\"fotoPerfil\").to.match(/^http(s)?:\\/\\/.+$/);\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"\r",
+							"// CT003 - Teste de validação de endpoint inexistente\r",
+							"pm.test(\"Status code é 404 para endpoint inexistente\", function () {\r",
+							"    pm.sendRequest('https://api-challenge.primecontrol.com.br/endpointinexistente', function (err, response) {\r",
+							"        pm.expect(response.code).to.equal(404);\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api-challenge.primecontrol.com.br/listClients",
+					"protocol": "https",
+					"host": [
+						"api-challenge",
+						"primecontrol",
+						"com",
+						"br"
+					],
+					"path": [
+						"listClients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "addClienteOK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// CT001 - Teste de adição bem-sucedida\r",
+							"pm.test(\"CT001 – Teste de adição bem-sucedida\", function () {\r",
+							"    console.log(\"Resposta da requisição: \", pm.response.text());\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"    // Adicione mais verificações conforme necessário\r",
+							"});\r",
+							"\r",
+							"\r",
+							"// CT002 - Teste de campos obrigatórios\r",
+							"pm.test(\"Erro ao não fornecer campo obrigatório 'nome'\", function () {\r",
+							"    const requestBody = {\r",
+							"        \"email\": \"exemplo@cliente.com\",\r",
+							"        \"fone\": 123456789,\r",
+							"        \"fotoPerfil\": \"https://example.com/image.jpg\",\r",
+							"        \"cep\": \"12345-678\",\r",
+							"        \"endereco\": \"Rua Exemplo, 123\",\r",
+							"        \"complemento\": \"Apto 101\",\r",
+							"        \"pais\": \"Brasil\",\r",
+							"        \"genero\": \"Masculino\",\r",
+							"        \"ferramentas\": [\"Ferramenta1\", \"Ferramenta2\"]\r",
+							"    };\r",
+							"\r",
+							"    pm.request.body = {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify(requestBody)\r",
+							"    };\r",
+							"\r",
+							"    pm.sendRequest(pm.request, function (err, response) {\r",
+							"        pm.expect(response.code).to.equal(400);\r",
+							"        pm.expect(response.json()).to.have.property(\"error\").to.equal(\"O campo 'nome' é obrigatório.\");\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// CT003 - Teste de validação do e-mail e URL do perfil\r",
+							"pm.test(\"Erro ao fornecer e-mail e URL inválidos\", function () {\r",
+							"    const requestBody = {\r",
+							"        \"nome\": \"Exemplo Cliente\",\r",
+							"        \"email\": \"email_invalido\",\r",
+							"        \"fone\": 123456789,\r",
+							"        \"fotoPerfil\": \"url_invalida\",\r",
+							"        \"cep\": \"12345-678\",\r",
+							"        \"endereco\": \"Rua Exemplo, 123\",\r",
+							"        \"complemento\": \"Apto 101\",\r",
+							"        \"pais\": \"Brasil\",\r",
+							"        \"genero\": \"Masculino\",\r",
+							"        \"ferramentas\": [\"Ferramenta1\", \"Ferramenta2\"]\r",
+							"    };\r",
+							"\r",
+							"    pm.request.body = {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify(requestBody)\r",
+							"    };\r",
+							"\r",
+							"    pm.sendRequest(pm.request, function (err, response) {\r",
+							"        pm.expect(response.code).to.equal(400);\r",
+							"        pm.expect(response.json()).to.have.property(\"error\").to.equal(\"Formato de e-mail inválido. A 'fotoPerfil' deve ser uma URL válida.\");\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nome\": \"QA Gledson\",\r\n    \"email\": \"teste01@gmail.com\",\r\n    \"fone\": 123456789,\r\n    \"fotoPerfil\": \"https://example.com/image.jpg\",\r\n    \"cep\": \"12345-678\",\r\n    \"endereco\": \"Rua Exemplo, 123\",\r\n    \"complemento\": \"Apto 101\",\r\n    \"pais\": \"Brasil\",\r\n    \"genero\": \"Masculino\",\r\n    \"ferramentas\": [\"Ferramenta1\", \"Ferramenta2\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-challenge.primecontrol.com.br/addClient",
+					"protocol": "https",
+					"host": [
+						"api-challenge",
+						"primecontrol",
+						"com",
+						"br"
+					],
+					"path": [
+						"addClient"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteClientOK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// CT001 - Teste de exclusão bem-sucedida\r",
+							"// Para realizar esse teste deverá efetuar a adição de um usuário e passar um ID válido\r",
+							"pm.test(\"Exclusão bem-sucedida ao fornecer um ID válido\", function () {\r",
+							"    // Log da resposta da requisição para fins de depuração\r",
+							"    console.log(\"Resposta da requisição: \", pm.response.text());\r",
+							"    \r",
+							"    // Verificação do código de status esperado (200)\r",
+							"    pm.response.to.have.status(200);\r",
+							"\r",
+							"    // Verificação do corpo da resposta JSON\r",
+							"    const responseBody = pm.response.json();\r",
+							"    pm.expect(responseBody).to.have.property('message', 'Cliente excluído com sucesso!');\r",
+							"});\r",
+							"\r",
+							"//------------------------------------------------------------------------------------------------------\r",
+							"\r",
+							"// CT002 - Teste de cliente não encontrado\r",
+							"// Para realizar esse teste deverá excluir o ID antes ou passar um ID inválido\r",
+							"pm.test(\"Cliente não encontrado - Status code 404 e mensagem adequada\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property(\"message\", \"Cliente não encontrado.\");\r",
+							"});\r",
+							"\r",
+							"//------------------------------------------------------------------------------------------------------\r",
+							"\r",
+							"// CT003 - Teste de exclusão sem ID\r",
+							"// Para realizar esse teste deverá retirar o ID da url\r",
+							"pm.test(\"Exclusão sem ID - Status code 404 e mensagem de erro\", function () {\r",
+							"    console.log(\"Resposta da requisição: \", pm.response.text());\r",
+							"    \r",
+							"    pm.response.to.have.status(404);\r",
+							"    // Adicione mais verificações conforme necessário\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://api-challenge.primecontrol.com.br/deleteClient/FrCc29jpp8VNVP4P2Jao",
+					"protocol": "https",
+					"host": [
+						"api-challenge",
+						"primecontrol",
+						"com",
+						"br"
+					],
+					"path": [
+						"deleteClient",
+						"FrCc29jpp8VNVP4P2Jao"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateClientOK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Para a execução correta dos cenários abaixo, é necessário que ao executar um deles, os demais estejam comentados (ex.: Executar o primeiro, deve comentar o segundo e o terceiro).\r",
+							"\r",
+							"// CT001 - Teste de atualização bem-sucedida\r",
+							"// Para esse cenário funcionar, é necessário passar os parâmetros no body e inserir um id válido.\r",
+							"pm.test(\"CT001 - Teste de atualização bem-sucedida\", function () {\r",
+							"    \r",
+							"    // Verificação do código de status esperado (200)\r",
+							"    pm.expect(pm.response.code).to.equal(200);\r",
+							"    \r",
+							"    //Verificar mensagem de retorno do JSON\r",
+							"    pm.expect(pm.response.json().message).to.equal(\"Cliente atualizado com sucesso!\");\r",
+							"});\r",
+							"\r",
+							"//------------------------------------------------------------------------------------------------------\r",
+							"\r",
+							"// CT002 - Teste de cliente não encontrado\r",
+							"// Para executar esse teste, é necessário remover o id da url.\r",
+							"pm.test(\"Status code é 400 e a resposta contém mensagem 'Informe ao menos um campo para atualizar'\", function () {\r",
+							"    // Verificação do código de status esperado (404)\r",
+							"    pm.response.to.have.status(404);\r",
+							"\r",
+							"    try {\r",
+							"        const jsonData = pm.response.json();\r",
+							"        pm.expect(jsonData).to.have.property(\"message\").to.equal(\"Informe ao menos um campo para atualizar\");\r",
+							"    } catch (e) {\r",
+							"        // Se houver um erro ao analisar JSON, isso pode ser uma resposta HTML de erro\r",
+							"        console.error(\"Erro ao analisar JSON. Resposta pode ser HTML:\", pm.response.text());\r",
+							"    }\r",
+							"});\r",
+							"\r",
+							"//------------------------------------------------------------------------------------------------------\r",
+							"\r",
+							"// CT003 - Teste de atualização sem campos\r",
+							"// Para esse cenário funcionar, é necessário remover todos os parâmetros do body.\r",
+							"pm.test(\"Status code é 400 e a resposta contém mensagem de erro\", function () {\r",
+							"    \r",
+							"    // Verificação do código de status esperado (400)\r",
+							"    pm.response.to.have.status(400);\r",
+							"\r",
+							"    try {\r",
+							"        const jsonData = pm.response.json();\r",
+							"        pm.expect(jsonData).to.have.property(\"error\");\r",
+							"    } catch (e) {\r",
+							"        // Se houver um erro ao analisar JSON, isso pode ser uma resposta HTML de erro\r",
+							"        console.error(\"Erro ao analisar JSON. Resposta pode ser HTML:\", pm.response.text());\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    // \"nome\": \"Exemplo Cliente\",\r\n    // \"email\": \"exemplo@cliente.com\",\r\n    // \"fone\": 123456789\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-challenge.primecontrol.com.br/updateClient/",
+					"protocol": "https",
+					"host": [
+						"api-challenge",
+						"primecontrol",
+						"com",
+						"br"
+					],
+					"path": [
+						"updateClient",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "nome",
+			"value": ""
+		},
+		{
+			"key": "cpf",
+			"value": ""
+		},
+		{
+			"key": "rg",
+			"value": ""
+		},
+		{
+			"key": "email",
+			"value": ""
+		},
+		{
+			"key": "idade",
+			"value": ""
+		},
+		{
+			"key": "sexo",
+			"value": ""
+		}
+	]
+}
